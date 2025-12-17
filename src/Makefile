@@ -15,4 +15,4 @@ simplemq: $(OBJS)
 .PHONY: clean all
 
 clean:
-	rm -f *.o
+	rm -f *.o simplemq

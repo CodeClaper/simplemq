@@ -113,6 +113,6 @@ core
 .cache/
 compile_commands.json
 
-src/simplekv
+src/simplemq
 src/bench/bench
 test/gtest/gtest
