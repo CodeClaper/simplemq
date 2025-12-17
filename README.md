@@ -1,1 +1,1 @@
-### Simplemq is simple MQ database. ###
+### SimpleMQ is simple MQ database. ###
