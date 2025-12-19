@@ -1,0 +1,2 @@
+
+void ThrowErr(char *msg);

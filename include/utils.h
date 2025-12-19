@@ -1,7 +1,5 @@
 #include <stdbool.h>
 
-/* Trim */
 char *Trim(char *s);
-
-/* Check if a file has prefix. */
+bool StrIsEmpty(char *s);
 bool StartWith(char *str, const char *prefix);
