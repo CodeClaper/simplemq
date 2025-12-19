@@ -2,7 +2,7 @@ includedir = ../include
 headerdirs = $(includedir)/
 headers := $(shell find $(headerdirs) -name "*.h")
 OBJS := $(patsubst %.c,%.o,$(wildcard *.c))
-CC = gcc
+CC = cc
 
 include ../common.mk
 
