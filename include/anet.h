@@ -5,5 +5,6 @@
 #define ANET_ERR  0
 
 int CreateTcpServer(char *host, int port);
+int ServerAccept(int serversocket, char *clientIp, int *clientPort);
 
 #endif

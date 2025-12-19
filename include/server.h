@@ -4,6 +4,8 @@
 #include <stdbool.h>
 #include "eloop.h"
 
+#define DEFAULT_PORT 6981
+
 typedef struct SimpleKVServer {
     char *host;
     int port;

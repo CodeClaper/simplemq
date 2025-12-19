@@ -1,3 +1,4 @@
+#include <asm-generic/errno-base.h>
 #include <asm-generic/socket.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -7,6 +8,7 @@
 #include <string.h>
 #include <unistd.h>
 #include "anet.h"
+#include "common.h"
 #include "utils.h"
 
 
@@ -54,4 +56,29 @@ int CreateTcpServer(char *host, int port) {
     }
 
     return s;
+}
+
+/* Server socket accept client connection. */
+int ServerAccept(int serversocket, char *clientIp, int *clientPort) {
+    int fd;
+    struct sockaddr_in sa;
+    unsigned int salen;
+    
+    FOREVER {
+        salen = sizeof(sa);
+        fd = accept(serversocket, (struct sockaddr *)&sa, &salen);
+        if (fd == -1) {
+            if (errno == EINTR) continue;
+            else {
+                fprintf(stderr, "Accept error: %s\n", strerror(errno));
+                return ANET_ERR;
+            }
+        }
+        break;
+    }
+
+    if (clientIp) strcpy(clientIp, inet_ntoa(sa.sin_addr));
+    if (clientPort) *clientPort = ntohs(sa.sin_port);
+    
+    return fd;
 }

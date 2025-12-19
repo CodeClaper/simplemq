@@ -29,7 +29,7 @@ void ProcessEvent(int flags) {
 
     /* If nothing, return back ASAP.*/
     if (flags && ELOOP_NONE) return;
-    
+
 }
 
 /* The main entry for event loop. */
