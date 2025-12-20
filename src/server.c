@@ -16,7 +16,8 @@ SimpleKVServer server;
 static void ClientReadProc(struct EventLoop *el, int fd, int mask, void *privdata) {
     char buf[BUFF_SIZE];
     int bytes;
-
+    
+    memset(buf, 0, BUFF_SIZE);
     bytes = read(fd, buf, BUFF_SIZE);
     if (bytes == -1) {
         if (errno == EAGAIN) {
