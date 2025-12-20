@@ -1,5 +1,8 @@
+#include <asm-generic/errno-base.h>
+#include <errno.h>
 #include <stdio.h>
-#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
 #include "server.h"
 #include "common.h"
 #include "config.h"
@@ -9,6 +12,26 @@
 #include "mm.h"
 
 SimpleKVServer server;
+
+static void ClientReadProc(struct EventLoop *el, int fd, int mask, void *privdata) {
+    char buf[BUFF_SIZE];
+    int bytes;
+
+    bytes = read(fd, buf, BUFF_SIZE);
+    if (bytes == -1) {
+        if (errno == EAGAIN) {
+            bytes = 0;
+        } else {
+            fprintf(stderr, "Read from client erro: %s", strerror(errno));
+            return;
+        }
+    } else if (bytes == 0) {
+        printf("Client closed connection.");
+        return;
+    }
+    
+    printf("Client: %s\n", buf);
+}
 
 /* Server socket accept process.*/
 static void ServerAcceptProc(struct EventLoop *el, int fd, int mask, void *privdata) {
@@ -22,6 +45,8 @@ static void ServerAcceptProc(struct EventLoop *el, int fd, int mask, void *privd
     cfd = ServerAccept(fd, clientIp, &clientPort);
     if (cfd == ANET_ERR) ThrowErr("Accept fail."); 
     printf("Accepted %s:%d\n", clientIp, clientPort);
+    if (CreateFileEvent(el, cfd, ELOOP_READABLE, ClientReadProc, NULL) == ELOOP_ERR) 
+        ThrowErr("Create file event fail.");
 }
 
 /* Init the server. */
