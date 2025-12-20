@@ -1,7 +1,6 @@
-#include <stdlib.h>
 #include <sys/select.h>
+#include <unistd.h>
 #include "eloop.h"
-#include "server.h"
 #include "mm.h"
 
 /* Create a file event. */
@@ -24,17 +23,62 @@ int CreateFileEvent(EventLoop *el, int fd, int mask, elFileProc *proc, void *pri
 }
 
 /* Process event. */
-void ProcessEvent(int flags) {
-    int numkeys;
+void ProcessEvent(EventLoop *el, int flags) {
+    int maxfd = 0, numfd = 0, numkeys = 0;
+    fd_set rfds, wfds, efds;
+    FileEvent *fe = el->fileEventHead;
 
     /* If nothing, return back ASAP.*/
-    if (flags && ELOOP_NONE) return;
+    if (!(flags & ELOOP_TIME_EVENTS) && !(flags & ELOOP_FILE_EVENTS)) return;
+
+    FD_ZERO(&rfds);
+    FD_ZERO(&wfds);
+    FD_ZERO(&efds);
+
+    if (flags & ELOOP_FILE_EVENTS) {
+        while (fe != NULL) {
+            if (fe->mask & ELOOP_READABLE) FD_SET(fe->fd, &rfds);
+            if (fe->mask & ELOOP_WRITABLE) FD_SET(fe->fd, &wfds);
+            if (fe->mask & ELOOP_EXCEPTION) FD_SET(fe->fd, &efds);
+            if (maxfd < fe->fd) maxfd = fe->fd;
+            numfd++;
+            fe = fe->next;
+        }
+    }
+    
+    if (numfd > 0 || ((flags & ELOOP_TIME_EVENTS) && !(flags & ELOOP_DONT_WAIT))) {
+        numkeys = select(maxfd + 1, &rfds, &wfds, &efds, NULL);
+        if (numkeys > 0) {
+            fe = el->fileEventHead;
+            while (fe != NULL) {
+                int fd = fe->fd;
+                if ((fe->mask & ELOOP_READABLE && FD_ISSET(fd, &rfds)) ||
+                    (fe->mask & ELOOP_WRITABLE && FD_ISSET(fd, &wfds)) ||
+                    (fe->mask & ELOOP_EXCEPTION && FD_ISSET(fd, &efds))
+                ) {
+                    int mask = 0;
+                    if (fe->mask & ELOOP_READABLE && FD_ISSET(fd, &rfds)) mask |= ELOOP_READABLE;
+                    if (fe->mask & ELOOP_WRITABLE && FD_ISSET(fd, &rfds)) mask |= ELOOP_WRITABLE;
+                    if (fe->mask & ELOOP_EXCEPTION && FD_ISSET(fd, &rfds)) mask |= ELOOP_EXCEPTION;
+                    
+                    /* Procee file event. */
+                    fe->proc(el, fd, mask, fe->privdata);
+
+                    FD_CLR(fd, &rfds);
+                    FD_CLR(fd, &wfds);
+                    FD_CLR(fd, &efds);
+                } else {
+                    fe = fe->next;
+                }
+            }
+        }
+    }
 
 }
 
 /* The main entry for event loop. */
-void EloopMain() {
-    while (server.enable_loop) {
-        ProcessEvent(ELOOP_ALL);
+void EloopMain(EventLoop *el) {
+    while (!el->stop) {
+        ProcessEvent(el, ELOOP_ALL_EVENTS);
     }
 }

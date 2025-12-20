@@ -9,9 +9,8 @@
 typedef struct SimpleKVServer {
     char *host;
     int port;
-    bool enable_loop;
-    EventLoop *el;
     int serverfd;
+    EventLoop *el;
 } SimpleKVServer;
 
 /****************************************

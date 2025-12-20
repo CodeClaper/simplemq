@@ -11,16 +11,17 @@
 SimpleKVServer server;
 
 /* Server socket accept process.*/
-static void ServerAcceptProc(struct EventLoop *el, int fd, void *privdata) {
+static void ServerAcceptProc(struct EventLoop *el, int fd, int mask, void *privdata) {
     int cfd, clientPort;
     char clientIp[128];
 
     UNUSED(el);
+    UNUSED(mask);
     UNUSED(privdata);
 
     cfd = ServerAccept(fd, clientIp, &clientPort);
     if (cfd == ANET_ERR) ThrowErr("Accept fail."); 
-    printf("Accepted %s:%d", clientIp, clientPort);
+    printf("Accepted %s:%d\n", clientIp, clientPort);
 }
 
 /* Init the server. */
@@ -28,8 +29,11 @@ static void InitServer() {
     server.host = NULL;
     server.port = DEFAULT_PORT;
     server.serverfd = -1;
-    server.enable_loop = true;
     server.el = instance(EventLoop);
+    server.el->numkeys = 0;
+    server.el->maxfd = 0;
+    server.el->fileEventHead = NULL;
+    server.el->stop = false;
 }
 
 
@@ -45,7 +49,7 @@ static void SetupServer() {
 
     fd = CreateTcpServer(server.host, server.port);
     if (fd == ANET_ERR) ThrowErr("Create tcp socket server fail.");
-    retval = CreateFileEvent(server.el, fd, ELOOP_READ, ServerAcceptProc,  NULL);
+    retval = CreateFileEvent(server.el, fd, ELOOP_READABLE, ServerAcceptProc,  NULL);
     if (retval == ANET_ERR) ThrowErr("Create file event fail.");
     server.serverfd = fd;
 }
@@ -55,6 +59,6 @@ int main(int argc, char *argv[]) {
     InitServer();
     ConfigServer();
     SetupServer();
-    EloopMain();
+    EloopMain(server.el);
     return 0;
 }
