@@ -1,4 +1,3 @@
-#include <asm-generic/errno-base.h>
 #include <errno.h>
 #include <stdio.h>
 #include <string.h>
@@ -10,9 +9,11 @@
 #include "eloop.h"
 #include "err.h"
 #include "mm.h"
+#include "asciilog.h"
 
 SimpleKVServer server;
 
+/* Read from client process. */
 static void ClientReadProc(struct EventLoop *el, int fd, int mask, void *privdata) {
     char buf[BUFF_SIZE];
     int bytes;
@@ -52,9 +53,10 @@ static void ServerAcceptProc(struct EventLoop *el, int fd, int mask, void *privd
 }
 
 /* Init the server. */
-static void InitServer() {
+static void InitServer(void) {
     server.host = NULL;
     server.port = DEFAULT_PORT;
+    server.version = VERSION;
     server.serverfd = -1;
     server.el = instance(EventLoop);
     server.el->numkeys = 0;
@@ -65,13 +67,13 @@ static void InitServer() {
 
 
 /* Config the server. */
-static void ConfigServer() {
+static void ConfigServer(void) {
     /* Load from config file. */
     LoadConfigFile();
 }
 
 /* Setup the server. */
-static void SetupServer() {
+static void SetupServer(void) {
     int fd, retval;
 
     fd = CreateTcpServer(server.host, server.port);
@@ -81,11 +83,17 @@ static void SetupServer() {
     server.serverfd = fd;
 }
 
+static void SimpleKvAsciiArt(void) {
+    fprintf(stdout, asccii_logo, 
+            server.version, server.host, server.port, getpid());   
+}
+
 /* The main entry of server.  */
 int main(int argc, char *argv[]) {
     InitServer();
     ConfigServer();
     SetupServer();
+    SimpleKvAsciiArt();
     EloopMain(server.el);
     return 0;
 }
