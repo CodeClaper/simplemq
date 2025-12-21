@@ -22,11 +22,29 @@ int CreateFileEvent(EventLoop *el, int fd, int mask, elFileProc *proc, void *pri
     return ELOOP_OK;
 }
 
+/* Delete a file event. */
+void DeleteFileEvent(EventLoop *el, int fd, int mask) {
+    FileEvent *fe, *prev = NULL;
+    fe = el->fileEventHead;
+    while (fe != NULL) {
+        if (fe->fd == fd && fe->mask == mask) {
+            if (prev == NULL) 
+                el->fileEventHead = fe->next;
+            else
+                prev->next = fe->next;
+            MemFree(fe);
+            return;
+        }
+        prev = fe;
+        fe = fe->next;
+    }
+}
+
 /* Process event. */
 void ProcessEvent(EventLoop *el, int flags) {
     int maxfd = 0, numfd = 0, numkeys = 0;
     fd_set rfds, wfds, efds;
-    FileEvent *fe = el->fileEventHead;
+    FileEvent *fe = el->fileEventHead, *next;
 
     /* If nothing, return back ASAP.*/
     if (!(flags & ELOOP_TIME_EVENTS) && !(flags & ELOOP_FILE_EVENTS)) return;
@@ -52,6 +70,7 @@ void ProcessEvent(EventLoop *el, int flags) {
             fe = el->fileEventHead;
             while (fe != NULL) {
                 int fd = fe->fd;
+                next = fe->next;
                 if ((fe->mask & ELOOP_READABLE && FD_ISSET(fd, &rfds)) ||
                     (fe->mask & ELOOP_WRITABLE && FD_ISSET(fd, &wfds)) ||
                     (fe->mask & ELOOP_EXCEPTION && FD_ISSET(fd, &efds))
@@ -67,9 +86,8 @@ void ProcessEvent(EventLoop *el, int flags) {
                     FD_CLR(fd, &rfds);
                     FD_CLR(fd, &wfds);
                     FD_CLR(fd, &efds);
-                } else {
-                    fe = fe->next;
                 }
+                fe = next;
             }
         }
     }

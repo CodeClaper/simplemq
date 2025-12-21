@@ -27,11 +27,12 @@ static void ClientReadProc(struct EventLoop *el, int fd, int mask, void *privdat
             return;
         }
     } else if (bytes == 0) {
-        printf("Client closed connection.");
+        printf("Client closed connection.\n");
+        DeleteFileEvent(el,  fd, mask);
         return;
     }
     
-    printf("Client: %s\n", buf);
+    printf("Client: %s", buf);
 }
 
 /* Server socket accept process.*/
