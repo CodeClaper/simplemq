@@ -14,4 +14,8 @@ static const char* SLOG_LEVEL_NAME_LIST[] = {
     "INFO", "DEBUG", "SUCCS", "WARN", "ERROR", "PANIC"
 };
 
+
+void slog(LLevel level, const char *format, ...);
+void slogRaw(const char *format, ...);
+
 #endif

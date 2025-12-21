@@ -13,7 +13,7 @@
 #include <float.h>
 #include <regex.h>
 #include "utils.h"
-#include "config.h"
+#include "server.h"
 
 /* Left trim. 
  * Notice: not use the s directly, 

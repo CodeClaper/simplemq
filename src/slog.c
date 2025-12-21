@@ -31,7 +31,7 @@ static void flushlog(char* msg) {
 }
 
 /* slog. */
-void slog(LLevel level, char *format, ...) {
+void slog(LLevel level, const char *format, ...) {
     int len;
     va_list ap;
 
@@ -62,5 +62,31 @@ void slog(LLevel level, char *format, ...) {
         flushlog(buff);
         MemFree(sys_time);
     }
+}
+
+/* slog raw. */
+void slogRaw(const char *format, ...) {
+    int len;
+    va_list ap;
+
+    /* Calculate the len. */
+    va_start(ap, format);
+    len = vsnprintf(NULL, 0, format, ap);
+    if (len <= 0) {
+        va_end(ap);
+        return;
+    }
+
+    len = len + 1;
+    char message[len];
+    memset(message, 0, len);
+
+    va_start(ap, format);
+    vsnprintf(message, len, format, ap);
+    va_end(ap);
+
+    /* Only print higher level log. */
+    fprintf(stdout, "%s", message);
+    flushlog(message);
 }
 

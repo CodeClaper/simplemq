@@ -25,16 +25,16 @@ static void ClientReadProc(struct EventLoop *el, int fd, int mask, void *privdat
         if (errno == EAGAIN) {
             bytes = 0;
         } else {
-            fprintf(stderr, "Read from client erro: %s", strerror(errno));
+            slog(ERROR, "Read from client erro: %s", strerror(errno));
             return;
         }
     } else if (bytes == 0) {
-        printf("Client closed connection.\n");
+        slog(INFO, "Client closed connection.");
         DeleteFileEvent(el,  fd, mask);
         return;
     }
     
-    printf("Client: %s", buf);
+    slog(INFO, "Client: %s", buf);
 }
 
 /* Server socket accept process.*/
@@ -48,7 +48,7 @@ static void ServerAcceptProc(struct EventLoop *el, int fd, int mask, void *privd
 
     cfd = ServerAccept(fd, clientIp, &clientPort);
     if (cfd == ANET_ERR) ThrowErr("Accept fail."); 
-    printf("Accepted %s:%d\n", clientIp, clientPort);
+    slog(INFO, "Accepted %s:%d.", clientIp, clientPort);
     if (CreateFileEvent(el, cfd, ELOOP_READABLE, ClientReadProc, NULL) == ELOOP_ERR) 
         ThrowErr("Create file event fail.");
 }
@@ -86,7 +86,7 @@ static void SetupServer(void) {
 }
 
 static void SimpleMQAsciiArt(void) {
-    fprintf(stdout, asccii_logo, 
+    slogRaw(asccii_logo, 
             server.version, server.host, server.port, getpid());   
 }
 
