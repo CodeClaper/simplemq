@@ -10,8 +10,9 @@
 #include "err.h"
 #include "mm.h"
 #include "asciilog.h"
+#include "slog.h"
 
-SimpleKVServer server;
+SimpleMQServer server;
 
 /* Read from client process. */
 static void ClientReadProc(struct EventLoop *el, int fd, int mask, void *privdata) {
@@ -63,6 +64,7 @@ static void InitServer(void) {
     server.el->maxfd = 0;
     server.el->fileEventHead = NULL;
     server.el->stop = false;
+    server.llevel = INFO;
 }
 
 
@@ -83,7 +85,7 @@ static void SetupServer(void) {
     server.serverfd = fd;
 }
 
-static void SimpleKvAsciiArt(void) {
+static void SimpleMQAsciiArt(void) {
     fprintf(stdout, asccii_logo, 
             server.version, server.host, server.port, getpid());   
 }
@@ -93,7 +95,7 @@ int main(int argc, char *argv[]) {
     InitServer();
     ConfigServer();
     SetupServer();
-    SimpleKvAsciiArt();
+    SimpleMQAsciiArt();
     EloopMain(server.el);
     return 0;
 }
