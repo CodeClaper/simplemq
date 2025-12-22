@@ -3,7 +3,7 @@
 
 typedef enum LLevel {
     INFO,
-    DEBUG,
+    DBUG,
     SUCCS,
     WARN,
     ERROR,

@@ -5,6 +5,7 @@ OBJS := $(patsubst %.c,%.o,$(wildcard *.c))
 CC = cc
 
 include ../common.mk
+LDADDCFLAGS = -lpthread -lm -lz
 
 simplemq: $(OBJS)
 	$(CC) $(CFLAGS)  $(OBJS) -o $@ $(LDADDCFLAGS)
